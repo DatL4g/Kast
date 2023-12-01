@@ -1,11 +1,16 @@
+import com.vanniktech.maven.publish.SonatypeHost
+
 plugins {
     kotlin("multiplatform")
     id("com.android.library")
     kotlin("plugin.serialization")
+    id("com.vanniktech.maven.publish")
+    `maven-publish`
+    signing
 }
 
 val libName = "kast"
-val libVersion = "0.1.0"
+val libVersion = "0.1.0-SNAPSHOT"
 val artifact = "dev.datlag.kast"
 group = artifact
 version = libVersion
@@ -54,6 +59,43 @@ kotlin {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.6.2")
                 implementation("org.jmdns:jmdns:3.5.8")
+            }
+        }
+    }
+}
+
+mavenPublishing {
+    publishToMavenCentral(host = SonatypeHost.S01, automaticRelease = true)
+    signAllPublications()
+
+    coordinates(
+        groupId = artifact,
+        artifactId = libName,
+        version = libVersion
+    )
+
+    pom {
+        name.set(libName)
+        description.set("Kotlin multiplatform casting library.")
+        url.set("https://github.com/DatL4g/Kast")
+
+        licenses {
+            license {
+                name.set("Apache License 2.0")
+                url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+            }
+        }
+
+        scm {
+            url.set("https://github.com/DatL4g/Kast")
+            connection.set("scm:git:git://github.com/DatL4g/Kast.git")
+        }
+
+        developers {
+            developer {
+                id.set("DatL4g")
+                name.set("Jeff Retz (DatLag)")
+                url.set("https://github.com/DatL4g")
             }
         }
     }

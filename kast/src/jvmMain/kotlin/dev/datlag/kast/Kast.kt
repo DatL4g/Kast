@@ -27,6 +27,7 @@ data object Kast {
 
     @JvmStatic
     fun stopDiscovery() = apply {
+        dns?.unregisterAllServices()
         dns?.close()
         dns = null
     }
@@ -36,6 +37,12 @@ data object Kast {
     fun restartDiscovery(address: InetAddress? = null) = apply {
         stopDiscovery()
         startDiscovery(address)
+    }
+
+    @JvmStatic
+    fun dispose() = apply {
+        stopDiscovery()
+        devices.clear()
     }
 
     internal data object CastServiceListener : ServiceListener {
