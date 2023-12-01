@@ -28,8 +28,12 @@ data object Kast {
 
     private var volumeListener: VolumeListener? = null
     private var routeListener: DeviceListener? = null
+    private var connectionListener: ConnectionStateListener? = null
 
     var isSetupFinished: Boolean = false
+        private set
+
+    var connectionState: ConnectionState = ConnectionState.DISCONNECTED
         private set
 
     @JvmStatic
@@ -106,11 +110,20 @@ data object Kast {
             it.isDefault
         }.sortedWith(RouteComparator)
 
-        selectedRoute?.connectionState
+        connectionState = when (selectedRoute?.connectionState) {
+            MediaRouter.RouteInfo.CONNECTION_STATE_CONNECTING -> ConnectionState.CONNECTING
+            MediaRouter.RouteInfo.CONNECTION_STATE_CONNECTED -> ConnectionState.CONNECTED
+            else -> ConnectionState.DISCONNECTED
+        }
 
         routeListener?.invoke(
             selected = selectedRoute?.let { Device(it) },
             available = routes.map { Device(it) }
+        )
+
+        connectionListener?.invoke(
+            device = selectedRoute?.let { Device(it) },
+            state = connectionState
         )
     }
 
@@ -162,6 +175,18 @@ data object Kast {
         fun setRouteListener(listener: DeviceListener?) = apply {
             routeListener = listener
             update()
+        }
+
+        @JvmStatic
+        fun setConnectionStateListener(listener: ConnectionStateListener?) = apply {
+            connectionListener = listener
+            listener?.invoke(mediaRouter?.selectedRoute?.let {
+                if (it.isDefault) {
+                    null
+                } else {
+                    it
+                }
+            }?.let { Device(it) }, connectionState)
         }
     }
 
