@@ -96,9 +96,12 @@ data object Kast {
         router.unselect(mappedReason)
     }
 
-    private fun update() {
-        val router = mediaRouter ?: return
-        val selectedRoute = router.selectedRoute.let {
+    private fun update(
+        router: MediaRouter? = mediaRouter,
+        select: RouteInfo? = null
+    ) {
+        val usingRouter = router?.also { updateRouter(it) } ?: mediaRouter ?: return
+        val selectedRoute = (select ?: usingRouter.selectedRoute).let {
             if (it.isDefault) {
                 null
             } else {
@@ -106,13 +109,13 @@ data object Kast {
             }
         }
 
-        val routes = router.routes.filterNotNull().filterNot {
+        val routes = usingRouter.routes.filterNotNull().filterNot {
             it.isDefault
         }.sortedWith(RouteComparator)
 
         connectionState = when (selectedRoute?.connectionState) {
-            MediaRouter.RouteInfo.CONNECTION_STATE_CONNECTING -> ConnectionState.CONNECTING
-            MediaRouter.RouteInfo.CONNECTION_STATE_CONNECTED -> ConnectionState.CONNECTED
+            RouteInfo.CONNECTION_STATE_CONNECTING -> ConnectionState.CONNECTING
+            RouteInfo.CONNECTION_STATE_CONNECTED -> ConnectionState.CONNECTED
             else -> ConnectionState.DISCONNECTED
         }
 
@@ -127,10 +130,16 @@ data object Kast {
         )
     }
 
-    private fun updateVolume() {
-        val router = mediaRouter ?: return
+    private fun updateRouter(router: MediaRouter) {
+        _mediaRouter.enqueue()
+        _mediaRouter.clear()
+        _mediaRouter = WeakReference(router)
+    }
 
-        val selectedRoute = router.selectedRoute
+    private fun updateVolume(router: MediaRouter? = mediaRouter) {
+        val usingRouter = router ?: mediaRouter ?: return
+
+        val selectedRoute = usingRouter.selectedRoute
         if (selectedRoute.volumeHandling == MediaRoute2Info.PLAYBACK_VOLUME_FIXED) {
             volumeListener?.invoke(true, selectedRoute.volume, selectedRoute.volumeMax)
         } else {
@@ -228,37 +237,37 @@ data object Kast {
         override fun onRouteAdded(router: MediaRouter, route: MediaRouter.RouteInfo) {
             super.onRouteAdded(router, route)
 
-            update()
+            update(router)
         }
 
         override fun onRouteChanged(router: MediaRouter, route: MediaRouter.RouteInfo) {
             super.onRouteChanged(router, route)
 
-            update()
+            update(router)
         }
 
         override fun onRouteRemoved(router: MediaRouter, route: RouteInfo) {
             super.onRouteRemoved(router, route)
 
-            update()
+            update(router)
         }
 
         override fun onRouteSelected(router: MediaRouter, route: RouteInfo, reason: Int) {
             super.onRouteSelected(router, route, reason)
 
-            update()
+            update(router, route)
         }
 
         override fun onRouteUnselected(router: MediaRouter, route: RouteInfo, reason: Int) {
             super.onRouteUnselected(router, route, reason)
 
-            update()
+            update(router)
         }
 
         override fun onRouteVolumeChanged(router: MediaRouter, route: RouteInfo) {
             super.onRouteVolumeChanged(router, route)
 
-            updateVolume()
+            updateVolume(router)
         }
     }
 
