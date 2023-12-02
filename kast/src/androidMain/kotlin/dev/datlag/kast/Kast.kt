@@ -9,21 +9,23 @@ import androidx.mediarouter.media.MediaRouter.RouteInfo
 import com.google.android.gms.cast.framework.CastContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import java.lang.ref.WeakReference
 import java.util.concurrent.Executors
 import kotlin.math.abs
 import kotlin.properties.Delegates
 
 data object Kast {
 
-    private var _castContext = WeakReference<CastContext?>(null)
-    private var _mediaRouter = WeakReference<MediaRouter?>(null)
+    @Suppress("StaticFieldLeak")
+    private var _castContext: CastContext? = null
+
+    @Suppress("StaticFieldLeak")
+    private var _mediaRouter: MediaRouter? = null
 
     val castContext: CastContext?
-        get() = _castContext.get()
+        get() = _castContext
 
     val mediaRouter: MediaRouter?
-        get() = _mediaRouter.get()
+        get() = _mediaRouter
 
     private var selector by Delegates.notNull<MediaRouteSelector>()
 
@@ -66,8 +68,8 @@ data object Kast {
         mediaRouter: MediaRouter,
         mediaRouteSelector: MediaRouteSelector = castContext.mergedSelector ?: MediaRouteSelector.EMPTY
     ) = apply {
-        this._castContext = WeakReference(castContext)
-        this._mediaRouter = WeakReference(mediaRouter)
+        this._castContext = castContext
+        this._mediaRouter = mediaRouter
         this.selector = mediaRouteSelector
         this._setupFinished.value = true
 
@@ -76,16 +78,13 @@ data object Kast {
 
     @JvmStatic
     fun dispose() = apply {
-        this._castContext.enqueue()
-        this._castContext.clear()
-
-        this._mediaRouter.enqueue()
-        this._mediaRouter.clear()
+        this._castContext = null
+        this._mediaRouter = null
     }
 
     @JvmStatic
     fun select(device: Device) = apply {
-        val router = mediaRouter ?: return this
+        val router = mediaRouter ?: return@apply device.route.select()
         router.selectRoute(device.route)
     }
 
@@ -105,7 +104,7 @@ data object Kast {
         router: MediaRouter? = mediaRouter,
         select: RouteInfo? = null
     ) {
-        val usingRouter = router?.also { updateRouter(it) } ?: mediaRouter ?: return
+        val usingRouter = router ?: mediaRouter ?: return
         val selectedRoute = (select ?: usingRouter.selectedRoute).let {
             if (it.isSystemRoute) {
                 null
@@ -126,12 +125,6 @@ data object Kast {
 
         _selectedDevice.value = selectedRoute?.let { Device(it) }
         _allAvailableDevices.value = routes.map { Device(it) }
-    }
-
-    private fun updateRouter(router: MediaRouter) {
-        _mediaRouter.enqueue()
-        _mediaRouter.clear()
-        _mediaRouter = WeakReference(router)
     }
 
     private fun updateVolume(router: MediaRouter? = mediaRouter, route: RouteInfo? = null) {
