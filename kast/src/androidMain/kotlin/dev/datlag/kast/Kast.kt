@@ -2,12 +2,13 @@ package dev.datlag.kast
 
 import android.content.Context
 import android.media.MediaRoute2Info
-import androidx.core.content.ContextCompat
 import androidx.mediarouter.media.MediaRouteProvider
 import androidx.mediarouter.media.MediaRouteSelector
 import androidx.mediarouter.media.MediaRouter
 import androidx.mediarouter.media.MediaRouter.RouteInfo
 import com.google.android.gms.cast.framework.CastContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import java.lang.ref.WeakReference
 import java.util.concurrent.Executors
 import kotlin.math.abs
@@ -26,21 +27,25 @@ data object Kast {
 
     private var selector by Delegates.notNull<MediaRouteSelector>()
 
-    private var volumeListener: VolumeListener? = null
-    private var routeListener: DeviceListener? = null
-    private var connectionListener: ConnectionStateListener? = null
+    private val _setupFinished: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val setupFinished: StateFlow<Boolean> = _setupFinished
 
-    var isSetupFinished: Boolean = false
-        private set
+    private val _connectionState: MutableStateFlow<ConnectionState> = MutableStateFlow(ConnectionState.DISCONNECTED)
+    val connectionState: StateFlow<ConnectionState> = _connectionState
 
-    var connectionState: ConnectionState = ConnectionState.DISCONNECTED
-        private set
+    private val _selectedDevice: MutableStateFlow<Device?> = MutableStateFlow(null)
+    val selectedDevice: StateFlow<Device?> = _selectedDevice
+
+    private val _allAvailableDevices: MutableStateFlow<List<Device>> = MutableStateFlow(emptyList())
+    val allAvailableDevices: StateFlow<List<Device>> = _allAvailableDevices
+
+    private val _volumeInfo: MutableStateFlow<VolumeInfo?> = MutableStateFlow(null)
+    val volumeInfo: StateFlow<VolumeInfo?> = _volumeInfo
 
     @JvmStatic
     @JvmOverloads
     fun setup(context: Context, castContextUnavailable: CastContextUnavailable? = null) = apply {
-        val mediaRouter = ContextCompat.getSystemService(context, MediaRouter::class.java)
-            ?: MediaRouter.getInstance(context)
+        val mediaRouter = MediaRouter.getInstance(context)
 
         CastContext.getSharedInstance(context, Executors.newSingleThreadExecutor()).addOnSuccessListener {
             val cast = it ?: CastContext.getSharedInstance() ?: return@addOnSuccessListener castContextUnavailable?.invoke() ?: Unit
@@ -64,7 +69,7 @@ data object Kast {
         this._castContext = WeakReference(castContext)
         this._mediaRouter = WeakReference(mediaRouter)
         this.selector = mediaRouteSelector
-        this.isSetupFinished = true
+        this._setupFinished.value = true
 
         mediaRouter.addCallback(mediaRouteSelector, MediaCallback, MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY)
     }
@@ -102,7 +107,7 @@ data object Kast {
     ) {
         val usingRouter = router?.also { updateRouter(it) } ?: mediaRouter ?: return
         val selectedRoute = (select ?: usingRouter.selectedRoute).let {
-            if (it.isDefault) {
+            if (it.isSystemRoute) {
                 null
             } else {
                 it
@@ -110,24 +115,17 @@ data object Kast {
         }
 
         val routes = usingRouter.routes.filterNotNull().filterNot {
-            it.isDefault
+            it.isSystemRoute
         }.sortedWith(RouteComparator)
 
-        connectionState = when (selectedRoute?.connectionState) {
+        _connectionState.value =  when (selectedRoute?.connectionState) {
             RouteInfo.CONNECTION_STATE_CONNECTING -> ConnectionState.CONNECTING
             RouteInfo.CONNECTION_STATE_CONNECTED -> ConnectionState.CONNECTED
             else -> ConnectionState.DISCONNECTED
         }
 
-        routeListener?.invoke(
-            selected = selectedRoute?.let { Device(it) },
-            available = routes.map { Device(it) }
-        )
-
-        connectionListener?.invoke(
-            device = selectedRoute?.let { Device(it) },
-            state = connectionState
-        )
+        _selectedDevice.value = selectedRoute?.let { Device(it) }
+        _allAvailableDevices.value = routes.map { Device(it) }
     }
 
     private fun updateRouter(router: MediaRouter) {
@@ -136,14 +134,22 @@ data object Kast {
         _mediaRouter = WeakReference(router)
     }
 
-    private fun updateVolume(router: MediaRouter? = mediaRouter) {
+    private fun updateVolume(router: MediaRouter? = mediaRouter, route: RouteInfo? = null) {
         val usingRouter = router ?: mediaRouter ?: return
 
-        val selectedRoute = usingRouter.selectedRoute
+        val selectedRoute = route ?: usingRouter.selectedRoute
         if (selectedRoute.volumeHandling == MediaRoute2Info.PLAYBACK_VOLUME_FIXED) {
-            volumeListener?.invoke(true, selectedRoute.volume, selectedRoute.volumeMax)
+            _volumeInfo.value = VolumeInfo(
+                fixed = true,
+                current = selectedRoute.volume,
+                max = selectedRoute.volumeMax
+            )
         } else {
-            volumeListener?.invoke(false, selectedRoute.volume, selectedRoute.volumeMax)
+            _volumeInfo.value = VolumeInfo(
+                fixed = false,
+                current = selectedRoute.volume,
+                max = selectedRoute.volumeMax
+            )
         }
     }
 
@@ -170,32 +176,6 @@ data object Kast {
         @JvmStatic
         fun removeProvider(provider: MediaRouteProvider) = apply {
             mediaRouter?.removeProvider(provider)
-        }
-    }
-
-    data object Listener {
-        @JvmStatic
-        fun setVolumeListener(listener: VolumeListener?) = apply {
-            volumeListener = listener
-            updateVolume()
-        }
-
-        @JvmStatic
-        fun setRouteListener(listener: DeviceListener?) = apply {
-            routeListener = listener
-            update()
-        }
-
-        @JvmStatic
-        fun setConnectionStateListener(listener: ConnectionStateListener?) = apply {
-            connectionListener = listener
-            listener?.invoke(mediaRouter?.selectedRoute?.let {
-                if (it.isDefault) {
-                    null
-                } else {
-                    it
-                }
-            }?.let { Device(it) }, connectionState)
         }
     }
 
@@ -267,7 +247,7 @@ data object Kast {
         override fun onRouteVolumeChanged(router: MediaRouter, route: RouteInfo) {
             super.onRouteVolumeChanged(router, route)
 
-            updateVolume(router)
+            updateVolume(router, route)
         }
     }
 

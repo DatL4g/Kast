@@ -49,8 +49,15 @@ kotlin {
     applyDefaultHierarchyTemplate()
 
     sourceSets {
+        val commonMain by getting {
+            dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+            }
+        }
+
         val androidMain by getting {
             dependencies {
+                api("androidx.mediarouter:mediarouter:1.7.0-alpha01")
                 api("com.google.android.gms:play-services-cast:21.3.0")
                 api("com.google.android.gms:play-services-cast-framework:21.3.0")
             }
