@@ -10,7 +10,7 @@ plugins {
 }
 
 val libName = "kast"
-val libVersion = "0.1.6-SNAPSHOT"
+val libVersion = "0.1.7-SNAPSHOT"
 val artifact = "dev.datlag.kast"
 group = artifact
 version = libVersion
@@ -58,8 +58,8 @@ kotlin {
         val androidMain by getting {
             dependencies {
                 api("androidx.mediarouter:mediarouter:1.7.0-alpha01")
-                api("com.google.android.gms:play-services-cast:21.3.0")
-                api("com.google.android.gms:play-services-cast-framework:21.3.0")
+                api("com.google.android.gms:play-services-cast:21.4.0")
+                api("com.google.android.gms:play-services-cast-framework:21.4.0")
             }
         }
         val jvmMain by getting {
