@@ -14,8 +14,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
-var hasRouterListener = false
-
 class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,18 +26,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         setContent {
+            val isSetupFinished by Kast.setupFinished.collectAsState()
+            val allDevices by Kast.allAvailableDevices.collectAsState()
+
             MaterialTheme {
-                var available by remember { mutableStateOf(Kast.isSetupFinished) }
                 var activeScan by remember { mutableStateOf(false) }
 
-                if (Kast.isSetupFinished) {
-                    SideEffect {
-                        if (!hasRouterListener) {
-                            Kast.Listener.setRouteListener { selected, available ->
-                                Log.e("KAST", "Selected: ${selected?.name}")
-                                Log.e("KAST", "Available: ${available.map { it.name }}")
-                            }
-                            hasRouterListener = true
+                if (isSetupFinished) {
+                    LaunchedEffect(allDevices) {
+                        if (allDevices.isNotEmpty()) {
+                            Log.e("KAST", "Selected: ${allDevices.firstOrNull { it.selected }?.name}")
+                            Log.e("KAST", "Available: ${allDevices.map { it.name }}")
                         }
                     }
                     Column {
@@ -61,15 +58,6 @@ class MainActivity : AppCompatActivity() {
                     }
                 } else {
                     Text("Hello World")
-                }
-
-                LaunchedEffect(available) {
-                    if (!available) {
-                        withContext(Dispatchers.IO) {
-                            delay(1000)
-                            available = Kast.isSetupFinished
-                        }
-                    }
                 }
 
                 DisposableEffect(Unit) {

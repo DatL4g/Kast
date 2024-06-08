@@ -1,12 +1,14 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("multiplatform") version "1.9.21" apply false
-    kotlin("plugin.serialization") version "1.9.21" apply false
-    id("com.android.library") version "8.1.4" apply false
-    id("com.android.application") version "8.1.4" apply false
-    id("org.jetbrains.compose") version "1.5.11" apply false
-    id("com.vanniktech.maven.publish") version "0.25.3" apply false
+    kotlin("multiplatform") version "2.0.0" apply false
+    kotlin("plugin.serialization") version "2.0.0" apply false
+    id("com.android.library") version "8.4.1" apply false
+    id("com.android.application") version "8.4.1" apply false
+    id("org.jetbrains.compose") version "1.6.11" apply false
+    id("org.jetbrains.kotlin.plugin.compose") version "2.0.0" apply false
+    id("com.vanniktech.maven.publish") version "0.28.0" apply false
 }
 
 buildscript {
@@ -29,6 +31,8 @@ allprojects {
     }
 
     tasks.withType<KotlinCompile>().configureEach {
-        kotlinOptions.jvmTarget = JavaVersion.VERSION_17.toString()
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
     }
 }

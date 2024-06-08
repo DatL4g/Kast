@@ -10,7 +10,7 @@ plugins {
 }
 
 val libName = "kast"
-val libVersion = "0.1.7-SNAPSHOT"
+val libVersion = "0.1.8-SNAPSHOT"
 val artifact = "dev.datlag.kast"
 group = artifact
 version = libVersion
@@ -51,20 +51,20 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
             }
         }
 
         val androidMain by getting {
             dependencies {
-                api("androidx.mediarouter:mediarouter:1.7.0-alpha01")
-                api("com.google.android.gms:play-services-cast:21.4.0")
-                api("com.google.android.gms:play-services-cast-framework:21.4.0")
+                api("androidx.mediarouter:mediarouter:1.7.0")
+                api("com.google.android.gms:play-services-cast:21.5.0")
+                api("com.google.android.gms:play-services-cast-framework:21.5.0")
             }
         }
         val jvmMain by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.6.2")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.7.0")
                 implementation("org.jmdns:jmdns:3.5.8")
             }
         }

@@ -6,7 +6,8 @@ actual class Device(internal val route: MediaRouter.RouteInfo) {
     actual val name: String = route.name
     actual val type: DeviceType = when (route.deviceType) {
         MediaRouter.RouteInfo.DEVICE_TYPE_TV -> DeviceType.TV
-        MediaRouter.RouteInfo.DEVICE_TYPE_SPEAKER -> DeviceType.SPEAKER
+        MediaRouter.RouteInfo.DEVICE_TYPE_BUILTIN_SPEAKER,
+        MediaRouter.RouteInfo.DEVICE_TYPE_REMOTE_SPEAKER -> DeviceType.SPEAKER
         else -> DeviceType.UNKNOWN
     }
     actual val connectionState: ConnectionState = when (route.connectionState) {

@@ -9,9 +9,9 @@ import androidx.mediarouter.media.MediaRouter.RouteInfo
 import com.google.android.gms.cast.framework.CastContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import java.util.concurrent.Executors
 import kotlin.math.abs
-import kotlin.properties.Delegates
 
 data object Kast {
 
@@ -27,7 +27,7 @@ data object Kast {
     val mediaRouter: MediaRouter?
         get() = _mediaRouter
 
-    private var selector by Delegates.notNull<MediaRouteSelector>()
+    private var selector: MediaRouteSelector? = null
 
     private val _setupFinished: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val setupFinished: StateFlow<Boolean> = _setupFinished
@@ -66,7 +66,7 @@ data object Kast {
     fun setup(
         castContext: CastContext,
         mediaRouter: MediaRouter,
-        mediaRouteSelector: MediaRouteSelector = castContext.mergedSelector ?: MediaRouteSelector.EMPTY
+        mediaRouteSelector: MediaRouteSelector = runCatching { castContext.mergedSelector }.getOrNull() ?: MediaRouteSelector.EMPTY
     ) = apply {
         this._castContext = castContext
         this._mediaRouter = mediaRouter
@@ -117,14 +117,20 @@ data object Kast {
             it.isSystemRoute
         }.sortedWith(RouteComparator)
 
-        _connectionState.value =  when (selectedRoute?.connectionState) {
-            RouteInfo.CONNECTION_STATE_CONNECTING -> ConnectionState.CONNECTING
-            RouteInfo.CONNECTION_STATE_CONNECTED -> ConnectionState.CONNECTED
-            else -> ConnectionState.DISCONNECTED
+        _connectionState.update {
+            when (selectedRoute?.connectionState) {
+                RouteInfo.CONNECTION_STATE_CONNECTING -> ConnectionState.CONNECTING
+                RouteInfo.CONNECTION_STATE_CONNECTED -> ConnectionState.CONNECTED
+                else -> ConnectionState.DISCONNECTED
+            }
         }
 
-        _selectedDevice.value = selectedRoute?.let { Device(it) }
-        _allAvailableDevices.value = routes.map { Device(it) }
+        _selectedDevice.update {
+            selectedRoute?.let(::Device)
+        }
+        _allAvailableDevices.update {
+            routes.map(::Device)
+        }
     }
 
     private fun updateVolume(router: MediaRouter? = mediaRouter, route: RouteInfo? = null) {
@@ -149,14 +155,18 @@ data object Kast {
     data object Router {
         @JvmStatic
         @JvmOverloads
-        fun activeDiscovery(routeSelector: MediaRouteSelector = selector) = apply {
+        fun activeDiscovery(
+            routeSelector: MediaRouteSelector = selector ?: MediaRouteSelector.EMPTY
+        ) = apply {
             mediaRouter?.removeCallback(MediaCallback)
             mediaRouter?.addCallback(routeSelector, MediaCallback, MediaRouter.CALLBACK_FLAG_PERFORM_ACTIVE_SCAN)
         }
 
         @JvmStatic
         @JvmOverloads
-        fun passiveDiscovery(routeSelector: MediaRouteSelector = selector) = apply {
+        fun passiveDiscovery(
+            routeSelector: MediaRouteSelector = selector ?: MediaRouteSelector.EMPTY
+        ) = apply {
             mediaRouter?.removeCallback(MediaCallback)
             mediaRouter?.addCallback(routeSelector, MediaCallback, MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY)
         }
