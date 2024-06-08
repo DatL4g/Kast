@@ -10,7 +10,7 @@ plugins {
 }
 
 val libName = "kast"
-val libVersion = "0.1.8-SNAPSHOT"
+val libVersion = "0.2.0-SNAPSHOT"
 val artifact = "dev.datlag.kast"
 group = artifact
 version = libVersion
