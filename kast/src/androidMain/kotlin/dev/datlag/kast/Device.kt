@@ -15,5 +15,5 @@ actual class Device(internal val route: MediaRouter.RouteInfo) {
         MediaRouter.RouteInfo.CONNECTION_STATE_CONNECTED -> ConnectionState.CONNECTED
         else -> ConnectionState.DISCONNECTED
     }
-    val selected: Boolean = route.isSelected
+    actual val isSelected: Boolean = route.isSelected
 }

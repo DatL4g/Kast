@@ -1,5 +1,8 @@
 package dev.datlag.kast
 
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -8,19 +11,22 @@ import javax.jmdns.JmDNS
 import javax.jmdns.ServiceEvent
 import javax.jmdns.ServiceListener
 
-data object Kast {
+actual object Kast {
 
     internal const val SERVICE_TYPE = "_googlecast._tcp.local."
     private var dns: JmDNS? = null
 
-    private val _allAvailableDevices: MutableStateFlow<List<Device>> = MutableStateFlow(emptyList())
-    val allAvailableDevices: StateFlow<List<Device>> = _allAvailableDevices
+    actual val isSupported: Boolean = false
+    actual val connectionState: StateFlow<ConnectionState> = MutableStateFlow(ConnectionState.DISCONNECTED)
+
+    private val _allAvailableDevices: MutableStateFlow<ImmutableSet<Device>> = MutableStateFlow(persistentSetOf())
+    actual val allAvailableDevices: StateFlow<ImmutableSet<Device>> = _allAvailableDevices
 
     @JvmStatic
     @JvmOverloads
     fun startDiscovery(address: InetAddress? = null) = apply {
         if (dns == null) {
-            _allAvailableDevices.update { emptyList() }
+            _allAvailableDevices.update { persistentSetOf() }
             dns = if (address == null) {
                 JmDNS.create()
             } else {
@@ -45,8 +51,18 @@ data object Kast {
     }
 
     @JvmStatic
-    fun dispose() = apply {
+    actual fun dispose() = apply {
         stopDiscovery()
+    }
+
+    @JvmStatic
+    actual fun select(device: Device) = apply {
+        // ToDo("Not yet implemented")
+    }
+
+    @JvmStatic
+    actual fun unselect(reason: UnselectReason) = apply {
+        // ToDo("Not yet implemented")
     }
 
     internal data object CastServiceListener : ServiceListener {
@@ -60,7 +76,9 @@ data object Kast {
 
             device?.let { newDevice ->
                 _allAvailableDevices.update {
-                    listOf(*it.toTypedArray(), newDevice)
+                    it.toMutableSet().apply {
+                        add(newDevice)
+                    }.toImmutableSet()
                 }
             }
         }
@@ -69,16 +87,17 @@ data object Kast {
             if (event?.type == SERVICE_TYPE) {
                 val deviceName: String? = event.info?.name ?: event.name
 
-                deviceName?.let {
-                    _allAvailableDevices.update { list ->
-                        list.filterNot {
-                            it.name == deviceName
-                        }
+                deviceName?.let { oldDevice ->
+                    _allAvailableDevices.update {
+                        it.filterNot { d -> d.name == oldDevice }.toImmutableSet()
                     }
                 }
             }
         }
 
+        /**
+         * Handled in [serviceAdded]
+         */
         override fun serviceResolved(event: ServiceEvent?) { }
     }
 }

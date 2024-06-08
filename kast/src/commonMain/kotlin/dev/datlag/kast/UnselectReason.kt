@@ -1,22 +1,33 @@
 package dev.datlag.kast
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 sealed interface UnselectReason {
-    data object UNKNOWN : UnselectReason
-    data object DISCONNECTED : UnselectReason
-    data object STOPPED : UnselectReason
-    data object DEVICE_CHANGED : UnselectReason
+
+    @Serializable
+    data object Unknown : UnselectReason
+
+    @Serializable
+    data object Disconnected : UnselectReason
+
+    @Serializable
+    data object Stopped : UnselectReason
+
+    @Serializable
+    data object Device_Changed : UnselectReason
 
     companion object {
         @JvmField
-        val unknown = UNKNOWN
+        val unknown = Unknown
 
         @JvmField
-        val disconnected: UnselectReason = DISCONNECTED
+        val disconnected: UnselectReason = Disconnected
 
         @JvmField
-        val stopped: UnselectReason = STOPPED
+        val stopped: UnselectReason = Stopped
 
         @JvmField
-        val deviceChanged: UnselectReason = DEVICE_CHANGED
+        val deviceChanged: UnselectReason = Device_Changed
     }
 }

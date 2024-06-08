@@ -52,6 +52,8 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+                implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.7")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.0")
             }
         }
 

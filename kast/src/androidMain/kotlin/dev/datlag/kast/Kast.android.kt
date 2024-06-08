@@ -5,15 +5,17 @@ import android.media.MediaRoute2Info
 import androidx.mediarouter.media.MediaRouteProvider
 import androidx.mediarouter.media.MediaRouteSelector
 import androidx.mediarouter.media.MediaRouter
-import androidx.mediarouter.media.MediaRouter.RouteInfo
 import com.google.android.gms.cast.framework.CastContext
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import java.util.concurrent.Executors
 import kotlin.math.abs
 
-data object Kast {
+actual object Kast {
 
     @Suppress("StaticFieldLeak")
     private var _castContext: CastContext? = null
@@ -29,17 +31,16 @@ data object Kast {
 
     private var selector: MediaRouteSelector? = null
 
-    private val _setupFinished: MutableStateFlow<Boolean> = MutableStateFlow(false)
-    val setupFinished: StateFlow<Boolean> = _setupFinished
+    actual val isSupported: Boolean = true
 
     private val _connectionState: MutableStateFlow<ConnectionState> = MutableStateFlow(ConnectionState.DISCONNECTED)
-    val connectionState: StateFlow<ConnectionState> = _connectionState
+    actual val connectionState: StateFlow<ConnectionState> = _connectionState
 
     private val _selectedDevice: MutableStateFlow<Device?> = MutableStateFlow(null)
     val selectedDevice: StateFlow<Device?> = _selectedDevice
 
-    private val _allAvailableDevices: MutableStateFlow<List<Device>> = MutableStateFlow(emptyList())
-    val allAvailableDevices: StateFlow<List<Device>> = _allAvailableDevices
+    private val _allAvailableDevices: MutableStateFlow<ImmutableSet<Device>> = MutableStateFlow(persistentSetOf())
+    actual val allAvailableDevices: StateFlow<ImmutableSet<Device>> = _allAvailableDevices
 
     private val _volumeInfo: MutableStateFlow<VolumeInfo?> = MutableStateFlow(null)
     val volumeInfo: StateFlow<VolumeInfo?> = _volumeInfo
@@ -71,38 +72,37 @@ data object Kast {
         this._castContext = castContext
         this._mediaRouter = mediaRouter
         this.selector = mediaRouteSelector
-        this._setupFinished.value = true
 
         mediaRouter.addCallback(mediaRouteSelector, MediaCallback, MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY)
     }
 
     @JvmStatic
-    fun dispose() = apply {
+    actual fun dispose() = apply {
         this._castContext = null
         this._mediaRouter = null
     }
 
     @JvmStatic
-    fun select(device: Device) = apply {
+    actual fun select(device: Device) = apply {
         val router = mediaRouter ?: return@apply device.route.select()
         router.selectRoute(device.route)
     }
 
     @JvmStatic
-    fun unselect(reason: UnselectReason) = apply {
+    actual fun unselect(reason: UnselectReason) = apply {
         val router = mediaRouter ?: return@apply
         val mappedReason = when (reason) {
-            is UnselectReason.UNKNOWN -> MediaRouter.UNSELECT_REASON_UNKNOWN
-            is UnselectReason.DISCONNECTED -> MediaRouter.UNSELECT_REASON_DISCONNECTED
-            is UnselectReason.STOPPED -> MediaRouter.UNSELECT_REASON_STOPPED
-            is UnselectReason.DEVICE_CHANGED -> MediaRouter.UNSELECT_REASON_ROUTE_CHANGED
+            is UnselectReason.Unknown -> MediaRouter.UNSELECT_REASON_UNKNOWN
+            is UnselectReason.Disconnected -> MediaRouter.UNSELECT_REASON_DISCONNECTED
+            is UnselectReason.Stopped -> MediaRouter.UNSELECT_REASON_STOPPED
+            is UnselectReason.Device_Changed -> MediaRouter.UNSELECT_REASON_ROUTE_CHANGED
         }
         router.unselect(mappedReason)
     }
 
     private fun update(
         router: MediaRouter? = mediaRouter,
-        select: RouteInfo? = null
+        select: MediaRouter.RouteInfo? = null
     ) {
         val usingRouter = router ?: mediaRouter ?: return
         val selectedRoute = (select ?: usingRouter.selectedRoute).let {
@@ -119,8 +119,8 @@ data object Kast {
 
         _connectionState.update {
             when (selectedRoute?.connectionState) {
-                RouteInfo.CONNECTION_STATE_CONNECTING -> ConnectionState.CONNECTING
-                RouteInfo.CONNECTION_STATE_CONNECTED -> ConnectionState.CONNECTED
+                MediaRouter.RouteInfo.CONNECTION_STATE_CONNECTING -> ConnectionState.CONNECTING
+                MediaRouter.RouteInfo.CONNECTION_STATE_CONNECTED -> ConnectionState.CONNECTED
                 else -> ConnectionState.DISCONNECTED
             }
         }
@@ -129,11 +129,11 @@ data object Kast {
             selectedRoute?.let(::Device)
         }
         _allAvailableDevices.update {
-            routes.map(::Device)
+            routes.map(::Device).toImmutableSet()
         }
     }
 
-    private fun updateVolume(router: MediaRouter? = mediaRouter, route: RouteInfo? = null) {
+    private fun updateVolume(router: MediaRouter? = mediaRouter, route: MediaRouter.RouteInfo? = null) {
         val usingRouter = router ?: mediaRouter ?: return
 
         val selectedRoute = route ?: usingRouter.selectedRoute
@@ -229,33 +229,33 @@ data object Kast {
             update(router)
         }
 
-        override fun onRouteRemoved(router: MediaRouter, route: RouteInfo) {
+        override fun onRouteRemoved(router: MediaRouter, route: MediaRouter.RouteInfo) {
             super.onRouteRemoved(router, route)
 
             update(router)
         }
 
-        override fun onRouteSelected(router: MediaRouter, route: RouteInfo, reason: Int) {
+        override fun onRouteSelected(router: MediaRouter, route: MediaRouter.RouteInfo, reason: Int) {
             super.onRouteSelected(router, route, reason)
 
             update(router, route)
         }
 
-        override fun onRouteUnselected(router: MediaRouter, route: RouteInfo, reason: Int) {
+        override fun onRouteUnselected(router: MediaRouter, route: MediaRouter.RouteInfo, reason: Int) {
             super.onRouteUnselected(router, route, reason)
 
             update(router)
         }
 
-        override fun onRouteVolumeChanged(router: MediaRouter, route: RouteInfo) {
+        override fun onRouteVolumeChanged(router: MediaRouter, route: MediaRouter.RouteInfo) {
             super.onRouteVolumeChanged(router, route)
 
             updateVolume(router, route)
         }
     }
 
-    private object RouteComparator : Comparator<RouteInfo?> {
-        override fun compare(lhs: RouteInfo?, rhs: RouteInfo?): Int {
+    private object RouteComparator : Comparator<MediaRouter.RouteInfo?> {
+        override fun compare(lhs: MediaRouter.RouteInfo?, rhs: MediaRouter.RouteInfo?): Int {
             return when {
                 lhs == null && rhs == null -> 0
                 lhs == null || rhs?.isSelected == true -> 1
@@ -264,4 +264,5 @@ data object Kast {
             }
         }
     }
+
 }

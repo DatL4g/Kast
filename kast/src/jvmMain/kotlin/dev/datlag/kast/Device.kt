@@ -22,6 +22,7 @@ actual data class Device(
     } ?: DeviceType.UNKNOWN
 
     actual val connectionState: ConnectionState = ConnectionState.DISCONNECTED
+    actual val isSelected: Boolean = connectionState == ConnectionState.CONNECTED
 
     internal sealed interface Capability {
         val mask: Int
