@@ -100,4 +100,12 @@ actual object Kast {
          */
         override fun serviceResolved(event: ServiceEvent?) { }
     }
+
+    actual data object Android {
+        @JvmStatic
+        actual fun activeDiscovery() { }
+
+        @JvmStatic
+        actual fun passiveDiscovery() { }
+    }
 }

@@ -17,4 +17,15 @@ expect object Kast {
 
     @JvmStatic
     fun unselect(reason: UnselectReason): Kast
+
+    /**
+     * Android specific options mapped for common module.
+     */
+    object Android {
+        @JvmStatic
+        fun activeDiscovery()
+
+        @JvmStatic
+        fun passiveDiscovery()
+    }
 }

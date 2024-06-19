@@ -216,6 +216,18 @@ actual object Kast {
         }
     }
 
+    actual data object Android {
+        @JvmStatic
+        actual fun activeDiscovery() {
+            Router.activeDiscovery()
+        }
+
+        @JvmStatic
+        actual fun passiveDiscovery() {
+            Router.passiveDiscovery()
+        }
+    }
+
     private object MediaCallback : MediaRouter.Callback() {
         override fun onRouteAdded(router: MediaRouter, route: MediaRouter.RouteInfo) {
             super.onRouteAdded(router, route)
