@@ -51,13 +51,13 @@ actual object Kast {
         val mediaRouter = MediaRouter.getInstance(context)
 
         CastContext.getSharedInstance(context, Executors.newSingleThreadExecutor()).addOnSuccessListener {
-            val cast = it ?: CastContext.getSharedInstance() ?: return@addOnSuccessListener castContextUnavailable?.invoke() ?: Unit
+            val cast = it ?: CastContext.getSharedInstance() ?: return@addOnSuccessListener castContextUnavailable?.invoke(null) ?: Unit
             setup(cast, mediaRouter)
         }.addOnFailureListener {
-            val cast = CastContext.getSharedInstance() ?: return@addOnFailureListener castContextUnavailable?.invoke() ?: Unit
+            val cast = CastContext.getSharedInstance() ?: return@addOnFailureListener castContextUnavailable?.invoke(it) ?: Unit
             setup(cast, mediaRouter)
         }.addOnCanceledListener {
-            val cast = CastContext.getSharedInstance() ?: return@addOnCanceledListener castContextUnavailable?.invoke() ?: Unit
+            val cast = CastContext.getSharedInstance() ?: return@addOnCanceledListener castContextUnavailable?.invoke(null) ?: Unit
             setup(cast, mediaRouter)
         }
     }

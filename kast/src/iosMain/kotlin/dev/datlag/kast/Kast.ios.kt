@@ -19,7 +19,7 @@ actual object Kast {
     actual val allAvailableDevices: StateFlow<ImmutableSet<Device>>
         get() = TODO("Not yet implemented")
 
-    @OptIn(ExperimentalForeignApi::class)
+    @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
     fun setup(
         options: GCKCastOptions,
         castContextUnavailable: CastContextUnavailable? = null
@@ -34,8 +34,9 @@ actual object Kast {
                     nativeHeap.free(error)
                 }
             } else {
+                val exception = error.value?.let(::KastError)
                 nativeHeap.free(error)
-                return@apply castContextUnavailable?.invoke() ?: Unit
+                return@apply castContextUnavailable?.invoke(exception) ?: Unit
             }
         }
 
