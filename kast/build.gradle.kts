@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.multiplatform)
     id("com.android.library")
-//    alias(libs.plugins.cocoapods)
+    alias(libs.plugins.cocoapods)
     alias(libs.plugins.serialization)
     alias(libs.plugins.vanniktech.publish)
     `maven-publish`
@@ -50,9 +50,20 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_17)
         }
     }
-//    iosX64()
-//    iosArm64()
-//    iosSimulatorArm64()
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
+
+    cocoapods {
+        summary = "Chromecast library"
+        ios.deploymentTarget = "14.0"
+
+        framework {
+            baseName = "Kast"
+        }
+
+        pod(name = "google-cast-sdk", moduleName = "GoogleCast")
+    }
 
     applyDefaultHierarchyTemplate()
 

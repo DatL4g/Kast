@@ -2,6 +2,7 @@ package dev.datlag.kast
 
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.coroutines.flow.StateFlow
+import kotlin.jvm.JvmStatic
 
 expect object Kast {
 
