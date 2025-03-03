@@ -1,10 +1,12 @@
 import com.vanniktech.maven.publish.SonatypeHost
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    kotlin("multiplatform")
+    alias(libs.plugins.multiplatform)
     id("com.android.library")
-    kotlin("plugin.serialization")
-    id("com.vanniktech.maven.publish")
+//    alias(libs.plugins.cocoapods)
+    alias(libs.plugins.serialization)
+    alias(libs.plugins.vanniktech.publish)
     `maven-publish`
     signing
 }
@@ -34,7 +36,7 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_17
     }
 }
@@ -43,25 +45,31 @@ kotlin {
     androidTarget {
         publishAllLibraryVariants()
     }
-    jvm()
+    jvm {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
+//    iosX64()
+//    iosArm64()
+//    iosSimulatorArm64()
 
-    jvmToolchain(JavaVersion.VERSION_17.majorVersion.toIntOrNull() ?: (JavaVersion.VERSION_17.ordinal + 1))
     applyDefaultHierarchyTemplate()
 
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
-                implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.7")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.0")
+                implementation(libs.coroutines)
+                implementation(libs.immutable)
+                implementation(libs.serialization)
             }
         }
 
         val androidMain by getting {
             dependencies {
-                api("androidx.mediarouter:mediarouter:1.7.0")
-                api("com.google.android.gms:play-services-cast:21.5.0")
-                api("com.google.android.gms:play-services-cast-framework:21.5.0")
+                api(libs.mediarouter)
+                api(libs.play.services.cast)
+                api(libs.play.services.cast.framework)
             }
         }
         val jvmMain by getting {
