@@ -6,6 +6,8 @@ immutable = "0.3.8"
 kotlin = "2.1.10"
 mediarouter = "1.7.0"
 playServicesCast = "22.0.0"
+playServicesCastTv = "21.1.1"
+playServicesCastLicense = "12.0.1"
 publish = "0.30.0"
 serialization = "1.8.0"
 
@@ -14,7 +16,10 @@ coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core"
 immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "immutable" }
 mediarouter = { group = "androidx.mediarouter", name = "mediarouter", version.ref = "mediarouter" }
 play-services-cast = { group = "com.google.android.gms", name = "play-services-cast", version.ref = "playServicesCast" }
+play-services-cast-license = { group = "com.google.android.gms", name = "play-services-cast-license", version.ref = "playServicesCastLicense" }
 play-services-cast-framework = { group = "com.google.android.gms", name = "play-services-cast-framework", version.ref = "playServicesCast" }
+play-services-cast-framework-license = { group = "com.google.android.gms", name = "play-services-cast-framework-license", version.ref = "playServicesCastLicense" }
+play-services-cast-tv = { group = "com.google.android.gms", name = "play-services-cast-tv", version.ref = "playServicesCastTv" }
 serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-core", version.ref = "serialization" }
 
 [plugins]

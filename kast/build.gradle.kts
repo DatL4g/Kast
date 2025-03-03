@@ -79,8 +79,14 @@ kotlin {
         val androidMain by getting {
             dependencies {
                 api(libs.mediarouter)
+
                 api(libs.play.services.cast)
+                api(libs.play.services.cast.license)
+
                 api(libs.play.services.cast.framework)
+                api(libs.play.services.cast.framework.license)
+
+                api(libs.play.services.cast.tv)
             }
         }
         val jvmMain by getting {
