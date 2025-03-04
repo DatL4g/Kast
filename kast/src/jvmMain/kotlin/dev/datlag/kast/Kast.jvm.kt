@@ -20,7 +20,7 @@ actual object Kast {
     actual val connectionState: StateFlow<ConnectionState> = MutableStateFlow(ConnectionState.DISCONNECTED)
 
     private val _allAvailableDevices: MutableStateFlow<ImmutableSet<Device>> = MutableStateFlow(persistentSetOf())
-    actual val allAvailableDevices: StateFlow<ImmutableSet<Device>> = _allAvailableDevices
+    actual val allAvailableDevices: StateFlow<Collection<Device>> = _allAvailableDevices
 
     @JvmStatic
     @JvmOverloads

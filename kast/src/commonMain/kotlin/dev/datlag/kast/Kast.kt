@@ -1,6 +1,5 @@
 package dev.datlag.kast
 
-import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.jvm.JvmStatic
 
@@ -8,7 +7,7 @@ expect object Kast {
 
     val isSupported: Boolean
     val connectionState: StateFlow<ConnectionState>
-    val allAvailableDevices: StateFlow<ImmutableSet<Device>>
+    val allAvailableDevices: StateFlow<Collection<Device>>
 
     @JvmStatic
     fun dispose(): Kast
