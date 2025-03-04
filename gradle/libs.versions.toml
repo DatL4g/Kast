@@ -5,6 +5,7 @@ coroutines = "1.10.1"
 immutable = "0.3.8"
 kotlin = "2.1.10"
 mediarouter = "1.7.0"
+native-coroutines = "1.0.0-ALPHA-39"
 playServicesCast = "22.0.0"
 playServicesCastTv = "21.1.1"
 playServicesCastLicense = "12.0.1"
@@ -29,5 +30,6 @@ cocoapods = { id = "org.jetbrains.kotlin.native.cocoapods", version.ref = "kotli
 compose = { id = "org.jetbrains.compose", version.ref = "compose" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+native-coroutines = { id = "com.rickclephas.kmp.nativecoroutines", version.ref = "native-coroutines" }
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 vanniktech-publish = { id = "com.vanniktech.maven.publish", version.ref = "publish" }

@@ -1,12 +1,17 @@
 package dev.datlag.kast
 
+import com.rickclephas.kmp.nativecoroutines.NativeCoroutinesState
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.jvm.JvmStatic
 
 expect object Kast {
 
     val isSupported: Boolean
+
+    @NativeCoroutinesState
     val connectionState: StateFlow<ConnectionState>
+
+    @NativeCoroutinesState
     val allAvailableDevices: StateFlow<Collection<Device>>
 
     @JvmStatic
