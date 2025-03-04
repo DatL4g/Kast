@@ -1,5 +1,6 @@
 package dev.datlag.kast
 
+import com.rickclephas.kmp.nativecoroutines.NativeCoroutinesState
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableSet
@@ -17,9 +18,13 @@ actual object Kast {
     private var dns: JmDNS? = null
 
     actual val isSupported: Boolean = false
+
+    @NativeCoroutinesState
     actual val connectionState: StateFlow<ConnectionState> = MutableStateFlow(ConnectionState.DISCONNECTED)
 
     private val _allAvailableDevices: MutableStateFlow<ImmutableSet<Device>> = MutableStateFlow(persistentSetOf())
+
+    @NativeCoroutinesState
     actual val allAvailableDevices: StateFlow<Collection<Device>> = _allAvailableDevices
 
     @JvmStatic
