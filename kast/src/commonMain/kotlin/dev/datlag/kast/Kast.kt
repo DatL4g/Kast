@@ -1,14 +1,18 @@
 package dev.datlag.kast
 
-import kotlinx.collections.immutable.ImmutableSet
+import com.rickclephas.kmp.nativecoroutines.NativeCoroutinesState
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.jvm.JvmStatic
 
 expect object Kast {
 
     val isSupported: Boolean
+
+    @NativeCoroutinesState
     val connectionState: StateFlow<ConnectionState>
-    val allAvailableDevices: StateFlow<ImmutableSet<Device>>
+
+    @NativeCoroutinesState
+    val allAvailableDevices: StateFlow<Collection<Device>>
 
     @JvmStatic
     fun dispose(): Kast

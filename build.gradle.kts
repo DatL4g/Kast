@@ -9,5 +9,6 @@ plugins {
     alias(libs.plugins.compose) apply false
     alias(libs.plugins.compose.compiler) apply false
     alias(libs.plugins.cocoapods) apply false
+    alias(libs.plugins.native.coroutines) apply false
     alias(libs.plugins.vanniktech.publish) apply false
 }

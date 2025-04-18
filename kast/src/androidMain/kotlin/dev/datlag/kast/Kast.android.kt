@@ -6,11 +6,13 @@ import androidx.mediarouter.media.MediaRouteProvider
 import androidx.mediarouter.media.MediaRouteSelector
 import androidx.mediarouter.media.MediaRouter
 import com.google.android.gms.cast.framework.CastContext
+import com.rickclephas.kmp.nativecoroutines.NativeCoroutinesState
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.util.concurrent.Executors
 import kotlin.math.abs
@@ -34,16 +36,20 @@ actual object Kast {
     actual val isSupported: Boolean = true
 
     private val _connectionState: MutableStateFlow<ConnectionState> = MutableStateFlow(ConnectionState.DISCONNECTED)
-    actual val connectionState: StateFlow<ConnectionState> = _connectionState
+
+    @NativeCoroutinesState
+    actual val connectionState: StateFlow<ConnectionState> = _connectionState.asStateFlow()
 
     private val _selectedDevice: MutableStateFlow<Device?> = MutableStateFlow(null)
-    val selectedDevice: StateFlow<Device?> = _selectedDevice
+    val selectedDevice: StateFlow<Device?> = _selectedDevice.asStateFlow()
 
     private val _allAvailableDevices: MutableStateFlow<ImmutableSet<Device>> = MutableStateFlow(persistentSetOf())
-    actual val allAvailableDevices: StateFlow<ImmutableSet<Device>> = _allAvailableDevices
+
+    @NativeCoroutinesState
+    actual val allAvailableDevices: StateFlow<Collection<Device>> = _allAvailableDevices.asStateFlow()
 
     private val _volumeInfo: MutableStateFlow<VolumeInfo?> = MutableStateFlow(null)
-    val volumeInfo: StateFlow<VolumeInfo?> = _volumeInfo
+    val volumeInfo: StateFlow<VolumeInfo?> = _volumeInfo.asStateFlow()
 
     @JvmStatic
     @JvmOverloads

@@ -3,21 +3,34 @@ package dev.datlag.kast
 import cocoapods.GoogleCast.GCKCastContext
 import cocoapods.GoogleCast.GCKCastOptions
 import cocoapods.GoogleCast.GCKError
+import com.rickclephas.kmp.nativecoroutines.NativeCoroutinesState
 import kotlinx.cinterop.*
 import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 actual object Kast {
 
     @OptIn(ExperimentalForeignApi::class)
     private var _castContext: GCKCastContext? = null
 
-    actual val isSupported: Boolean
-        get() = TODO("Not yet implemented")
-    actual val connectionState: StateFlow<ConnectionState>
-        get() = TODO("Not yet implemented")
-    actual val allAvailableDevices: StateFlow<ImmutableSet<Device>>
-        get() = TODO("Not yet implemented")
+    @OptIn(ExperimentalForeignApi::class)
+    val castContext: GCKCastContext?
+        get() = _castContext
+
+    actual val isSupported: Boolean = true
+
+    private val _connectionState: MutableStateFlow<ConnectionState> = MutableStateFlow(ConnectionState.DISCONNECTED)
+
+    @NativeCoroutinesState
+    actual val connectionState: StateFlow<ConnectionState> = _connectionState.asStateFlow()
+
+    private val _allAvailableDevices: MutableStateFlow<ImmutableSet<Device>> = MutableStateFlow(persistentSetOf())
+
+    @NativeCoroutinesState
+    actual val allAvailableDevices: StateFlow<Collection<Device>> = _allAvailableDevices.asStateFlow()
 
     @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
     fun setup(
@@ -55,12 +68,27 @@ actual object Kast {
         this._castContext = null
     }
 
-    actual fun select(device: Device): Kast {
-        TODO("Not yet implemented")
+    @OptIn(ExperimentalForeignApi::class)
+    actual fun select(device: Device): Kast = apply {
+        castContext?.sessionManager?.startSessionWithDevice(device.route)
     }
 
-    actual fun unselect(reason: UnselectReason): Kast {
-        TODO("Not yet implemented")
+    @OptIn(ExperimentalForeignApi::class)
+    actual fun unselect(reason: UnselectReason): Kast = apply {
+        when (reason) {
+            is UnselectReason.Disconnected -> {
+                castContext?.sessionManager?.endSessionAndStopCasting(true)
+            }
+            is UnselectReason.Stopped -> {
+                castContext?.sessionManager?.endSession()
+            }
+            is UnselectReason.Device_Changed -> {
+                castContext?.sessionManager?.endSessionAndStopCasting(true)
+            }
+            is UnselectReason.Unknown -> {
+                castContext?.sessionManager?.endSession()
+            }
+        }
     }
 
     /**
@@ -70,13 +98,6 @@ actual object Kast {
         actual fun activeDiscovery() { }
 
         actual fun passiveDiscovery() { }
-    }
-
-    object Apple {
-        @OptIn(ExperimentalForeignApi::class)
-        fun discovery() {
-
-        }
     }
 
 }

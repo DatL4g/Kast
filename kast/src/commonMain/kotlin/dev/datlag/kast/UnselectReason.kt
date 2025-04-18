@@ -1,6 +1,7 @@
 package dev.datlag.kast
 
 import kotlinx.serialization.Serializable
+import kotlin.jvm.JvmField
 
 @Serializable
 sealed interface UnselectReason {

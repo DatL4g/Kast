@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.multiplatform)
     id("com.android.library")
     alias(libs.plugins.cocoapods)
+    alias(libs.plugins.native.coroutines)
     alias(libs.plugins.serialization)
     alias(libs.plugins.vanniktech.publish)
     `maven-publish`
@@ -41,6 +42,10 @@ android {
     }
 }
 
+nativeCoroutines {
+    k2Mode = true
+}
+
 kotlin {
     jvmToolchain(21)
     androidTarget {
@@ -65,6 +70,10 @@ kotlin {
     applyDefaultHierarchyTemplate()
 
     sourceSets {
+        all {
+            languageSettings.optIn("kotlin.experimental.ExperimentalObjCName")
+        }
+
         val commonMain by getting {
             dependencies {
                 implementation(libs.coroutines)
