@@ -37,19 +37,16 @@ android {
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_21
     }
 }
 
 kotlin {
+    jvmToolchain(21)
     androidTarget {
         publishAllLibraryVariants()
     }
-    jvm {
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
-        }
-    }
+    jvm()
     iosX64()
     iosArm64()
     iosSimulatorArm64()
@@ -91,7 +88,7 @@ kotlin {
         }
         val jvmMain by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.7.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.8.1")
                 implementation("org.jmdns:jmdns:3.5.8")
             }
         }
